@@ -1,0 +1,47 @@
+CHIP CPU {
+
+    IN  inM[16],         // M value input  (M = contents of RAM[A])
+        instruction[16], // Instruction for execution
+        reset;           // Signals whether to re-start the current
+                         // program (reset==1) or continue executing
+                         // the current program (reset==0).
+
+    OUT outM[16],        // M value output
+        writeM,          // Write to M? 
+        addressM[15],    // Address in data memory (of M)
+        pc[15];          // address of next instruction
+
+    PARTS:
+    Not(in=instruction[15], out=ainst); // A命令か
+    Not(in=ainst, out=cinst); // C命令か
+    
+
+    // A Register
+    Mux16(a=instruction, b=aluout, sel=cinst, out=out1);
+    And(a=cinst, b=instruction[5], out=CLoadA); // C命令の場合
+    Or(a=ainst, b=CLoadA, out=loadA);
+    ARegister(in=out1, load=loadA, out=outa, out[0..14]=addressM);
+
+    And(a=cinst, b=instruction[12], out=useMorA);
+    Mux16(a=outa, b=inM , sel=useMorA, out=out2);
+
+    // D Register
+    And(a=cinst, b=instruction[4], out=loadD);
+    DRegister(in=aluout, load=loadD, out=outd);
+    ALU(x=outd, y=out2, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f=instruction[7], no=instruction[6], out=aluout, out=outM , zr=zr, ng=ng);
+
+    // ps (ALU出力が正かどうか)
+    Or(a=ng, b=zr, out=ngorzr);
+    Not(in=ngorzr, out=ps);
+    
+    And(a=instruction[0], b=ps, out=isps);
+    And(a=instruction[1], b=zr, out=iszr);
+    And(a=instruction[2], b=ng, out=isng);
+    Or8Way(in[0]=isps, in[1]=iszr, in[2]=isng, out=jumptmp);
+    And(a=cinst, b=jumptmp, out=jump); // C命令の場合
+    Not(in=jump, out=notjump);
+    PC(in=outa, load=jump, inc=notjump, reset=reset, out[0..14]=pc);
+
+    // writeM
+    And(a=cinst, b=instruction[3], out=writeM); // C命令の場合
+}
