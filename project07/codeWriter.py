@@ -1,5 +1,54 @@
 from parser import Command, split_command
-import io
+from typing import Literal
+
+
+def get_comparison_asms(gt: bool, lt: bool, eq: bool, jump_label_idx: int) -> list[str]:
+    asms = [
+        "@SP",
+        "A=M-1",
+        "D=M",
+        "A=A-1",
+        # M: arg1, D: arg2
+        "D=M-D",
+        f"@A{jump_label_idx}",
+        "D;JGT",
+        f"@B{jump_label_idx}",
+        "D;JLE",
+        f"@C{jump_label_idx}",
+        "D;JEQ",
+        f"(A{jump_label_idx})",
+        "@SP",
+        "A=M-1",
+        "A=A-1",
+        f"M={-1 if gt else 0}",
+        "D=A+1",
+        "@SP",
+        "M=D",
+        f"@END{jump_label_idx}",
+        "0;JMP",
+        f"(B{jump_label_idx})",
+        "@SP",
+        "A=M-1",
+        "A=A-1",
+        f"M={-1 if lt else 0}",
+        "D=A+1",
+        "@SP",
+        "M=D",
+        f"@END{jump_label_idx}",
+        "0;JMP",
+        f"(C{jump_label_idx})",
+        "@SP",
+        "A=M-1",
+        "A=A-1",
+        f"M={-1 if eq else 0}",
+        "D=A+1",
+        "@SP",
+        "M=D",
+        f"@END{jump_label_idx}",
+        "0;JMP",
+        f"(END{jump_label_idx})",
+    ]
+    return asms
 
 
 class CodeWriter:
@@ -30,46 +79,18 @@ class CodeWriter:
             asms = f"@SP\n@A=M-1\n{op}\n"
             self.asm_file.write(asms)
         elif command in ("eq", "gt", "lt"):
-            # TODO: eq, gt, lt 対応版に変更する
-            # gt
-            # asms = [
-            #     "@SP",
-            #     "A=M-1",
-            #     "D=M",
-            #     "A=A-1",
-            #     # M: arg1, D: arg2
-            #     "D=M-D",
-            #     f"@A{self.jump_label_idx}",
-            #     "D;JGT",
-            #     f"@B{self.jump_label_idx}",
-            #     "D;JLE",
-            #     f"(A{self.jump_label_idx})",
-            #     "@SP",
-            #     "A=M-1",
-            #     "A=A-1",
-            #     "M=-1",
-            #     "D=A+1",
-            #     "@SP",
-            #     "M=D",
-            #     f"@END{self.jump_label_idx}",
-            #     "0;JMP",
-            #     f"(B{self.jump_label_idx})",
-            #     "@SP",
-            #     "A=M-1",
-            #     "A=A-1",
-            #     "M=0",
-            #     "D=A+1",
-            #     "@SP",
-            #     "M=D",
-            #     f"@END{self.jump_label_idx}",
-            #     "0;JMP",
-            #     f"(END{self.jump_label_idx})",
-            # ]
+            eq = command == "eq"
+            gt = command == "gt"
+            lt = command == "lt"
+            asms = get_comparison_asms(gt, lt, eq, self.jump_label_idx)
+            asms_str = "\n".join(asms) + "\n"
+
+            self.asm_file.write(asms_str)
 
             self.jump_label_idx += 1
 
     def writePushPop(
-        self, command: Command.C_PUSH | Command.C_POP, segment: str, index: int
+        self, command: Literal[Command.C_PUSH, Command.C_POP], segment: str, index: int
     ):
         pass
 
