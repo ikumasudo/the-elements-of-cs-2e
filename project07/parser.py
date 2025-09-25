@@ -111,7 +111,6 @@ if __name__ == "__main__":
     p = Parser(source_path=source)
     while p.hasMoreLines():
         p.advance()
-        print(p.current_line)
         print(
             f"{p.current_line:20}\t| {p.commandType():20} {p.arg1():10} {str(p.arg2()):10}"
         )
