@@ -97,13 +97,13 @@ class Parser:
             Command.C_FUNCTION,
             Command.C_CALL,
         ):
-            return None
+            raise Exception(f"{self.commandType()} に arg2 は存在しません")
 
         parts = split_command(self.current_line)
         if len(parts) < 3:
             raise Exception("引数の数が足りません")
         arg2 = parts[2]
-        return arg2
+        return int(arg2)
 
 
 if __name__ == "__main__":

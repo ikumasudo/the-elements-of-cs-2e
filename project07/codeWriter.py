@@ -75,7 +75,9 @@ def get_segment_asms(op: Command, segment: str, i: int) -> str:
             ]
             return "\n".join(asms) + "\n"
         elif segment == "pointer":
-            pass
+            t = "THIS" if i == 0 else "THAT"
+            asms = [f"@{t}", "D=M", "@SP", "A=M", "M=D", "@SP", "M=M+1"]
+            return "\n".join(asms) + "\n"
         elif segment == "temp":
             asms = [
                 "@5",
@@ -132,6 +134,11 @@ def get_segment_asms(op: Command, segment: str, i: int) -> str:
                 "@SP",
                 "M=M-1",
             ]
+            return "\n".join(asms) + "\n"
+        elif segment == "pointer":
+            print(i, type(i))
+            t = "THIS" if i == 0 else "THAT"
+            asms = [f"@SP", "A=M-1", "D=M", f"@{t}", "M=D", "@SP", "M=M-1"]
             return "\n".join(asms) + "\n"
 
     pass
@@ -190,17 +197,20 @@ if __name__ == "__main__":
     from parser import Parser
 
     try:
-        source = "StackTest.vm"
+        source = "PointerTest.vm"
         p = Parser(source_path=source)
-        w = CodeWriter(asm_path="./output.asm")
+        w = CodeWriter(asm_path="./output2.asm")
         while p.hasMoreLines():
             p.advance()
-            c = f"{p.current_line:20}\t| {p.commandType():20} {p.arg1():10} {str(p.arg2()):10}"
-            print(c)
-            w.writeComment(c)
             if p.commandType() in (Command.C_PUSH, Command.C_POP):
+                c = f"{p.current_line:20}\t| {p.commandType():20} {p.arg1():10} {str(p.arg2()):10}"
+                print(c)
+                w.writeComment(c)
                 w.writePushPop(p.commandType(), p.arg1(), p.arg2())
             else:
+                c = f"{p.current_line:20}\t| {p.commandType():20} {p.arg1():10}"
+                print(c)
+                w.writeComment(c)
                 w.writeArithmetic(p.arg1())
     except Exception as e:
         raise e
