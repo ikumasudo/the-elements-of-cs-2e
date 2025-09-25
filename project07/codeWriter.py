@@ -13,7 +13,7 @@ def get_comparison_asms(gt: bool, lt: bool, eq: bool, jump_label_idx: int) -> li
         f"@A{jump_label_idx}",
         "D;JGT",
         f"@B{jump_label_idx}",
-        "D;JLE",
+        "D;JLT",
         f"@C{jump_label_idx}",
         "D;JEQ",
         f"(A{jump_label_idx})",
@@ -165,7 +165,7 @@ class CodeWriter:
             elif command == "not":
                 op = "M=!M"
 
-            asms = f"@SP\n@A=M-1\n{op}\n"
+            asms = f"@SP\nA=M-1\n{op}\n"
             self.asm_file.write(asms)
         elif command in ("eq", "gt", "lt"):
             eq = command == "eq"
@@ -190,7 +190,7 @@ if __name__ == "__main__":
     from parser import Parser
 
     try:
-        source = "BasicTest.vm"
+        source = "StackTest.vm"
         p = Parser(source_path=source)
         w = CodeWriter(asm_path="./output.asm")
         while p.hasMoreLines():
