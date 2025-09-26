@@ -1,5 +1,6 @@
 from parser import Command, split_command
 from typing import Literal
+from pathlib import Path
 
 
 def get_comparison_asms(gt: bool, lt: bool, eq: bool, jump_label_idx: int) -> list[str]:
@@ -51,7 +52,7 @@ def get_comparison_asms(gt: bool, lt: bool, eq: bool, jump_label_idx: int) -> li
     return asms
 
 
-def get_segment_asms(op: Command, segment: str, i: int) -> str:
+def get_segment_asms(op: Command, segment: str, i: int, prog_name: str) -> str:
     segment_pointer = {
         "local": "LCL",
         "argument": "ARG",
@@ -96,7 +97,10 @@ def get_segment_asms(op: Command, segment: str, i: int) -> str:
             asms = [f"@{i}", "D=A", "@SP", "A=M", "M=D", "@SP", "M=M+1"]
             return "\n".join(asms) + "\n"
         elif segment == "static":
-            pass
+            asms = [f"@{prog_name}.{i}", "D=M", "@SP", "A=M", "M=D", "@SP", "M=M+1"]
+            return "\n".join(asms) + "\n"
+        else:
+            raise Exception("不正なセグメントです")
     elif op == Command.C_POP:
         if segment in segment_pointer:
             asms = [
@@ -140,12 +144,17 @@ def get_segment_asms(op: Command, segment: str, i: int) -> str:
             t = "THIS" if i == 0 else "THAT"
             asms = [f"@SP", "A=M-1", "D=M", f"@{t}", "M=D", "@SP", "M=M-1"]
             return "\n".join(asms) + "\n"
-
-    pass
+        elif segment == "static":
+            asms = ["@SP", "A=M-1", "D=M", f"@{prog_name}.{i}", "M=D", "@SP", "M=M-1"]
+            return "\n".join(asms) + "\n"
+        else:
+            raise Exception("不正なセグメントです")
 
 
 class CodeWriter:
-    def __init__(self, asm_path: str):
+    def __init__(self, prog_name: str):
+        self.prog_name = prog_name
+        asm_path = f"{prog_name}.asm"
         self.asm_file = open(asm_path, "w")
 
         self.jump_label_idx = 0
@@ -186,7 +195,7 @@ class CodeWriter:
             self.jump_label_idx += 1
 
     def writePushPop(self, command: Command, segment: str, index: int):
-        asms = get_segment_asms(command, segment, index)
+        asms = get_segment_asms(command, segment, index, self.prog_name)
         self.asm_file.write(asms)
 
     def close(self):
@@ -197,9 +206,10 @@ if __name__ == "__main__":
     from parser import Parser
 
     try:
-        source = "PointerTest.vm"
+        source = "StaticTest.vm"
+        vm_stem = Path(source).stem
         p = Parser(source_path=source)
-        w = CodeWriter(asm_path="./output2.asm")
+        w = CodeWriter(prog_name=vm_stem)
         while p.hasMoreLines():
             p.advance()
             if p.commandType() in (Command.C_PUSH, Command.C_POP):
