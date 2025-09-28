@@ -72,6 +72,18 @@ class Parser:
                 return Command.C_POP
             case "add" | "sub" | "neg" | "eq" | "gt" | "lt" | "and" | "or" | "not":
                 return Command.C_ARITHMETIC
+            case "label":
+                return Command.C_LABEL
+            case "goto":
+                return Command.C_GOTO
+            case "if-goto":
+                return Command.C_IF
+            case "function":
+                return Command.C_FUNCTION
+            case "call":
+                return Command.C_CALL
+            case "return":
+                return Command.C_RETURN
             case _:
                 raise Exception("不正な Command Type です。")
 
@@ -106,10 +118,26 @@ class Parser:
 
 
 if __name__ == "__main__":
-    source = "BasicTest.vm"
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Basic Hack Assembler")
+    parser.add_argument("source", help=".vm file")
+    args = parser.parse_args()
+
+    source: str = args.source
     p = Parser(source_path=source)
     while p.hasMoreLines():
         p.advance()
-        print(
-            f"{p.current_line:20}\t| {p.commandType():20} {p.arg1():10} {str(p.arg2()):10}"
-        )
+        if p.commandType() in (
+            Command.C_PUSH,
+            Command.C_POP,
+            Command.C_CALL,
+            Command.C_FUNCTION,
+        ):
+            # 引数２つのパターン
+            c = f"{p.current_line:20}\t| {p.commandType():20} {p.arg1():10} {str(p.arg2()):10}"
+            print(c)
+        else:
+            # 引数１つのパターン
+            c = f"{p.current_line:20}\t| {p.commandType():20} {p.arg1():10}"
+            print(c)
