@@ -152,7 +152,7 @@ def get_segment_asms(op: Command, segment: str, i: int, prog_name: str) -> str:
 
 class CodeWriter:
     def __init__(self, prog_name: str):
-        self.prog_name = prog_name
+        self.prog_name = prog_name  # Xxx.vm の Xxx の部分
         asm_path = f"{prog_name}.asm"
         self.asm_file = open(asm_path, "w")
 
@@ -215,7 +215,8 @@ class CodeWriter:
         self.asm_file.write(asms)
 
     def writeFunction(self, functionName: str, nVars: str) -> None:
-        pass
+        asms = self._function_asms(functionName, nVars)
+        self.asm_file.write(asms)
 
     def writeCall(self, functionName: str, nArgs: str) -> None:
         pass
@@ -225,6 +226,13 @@ class CodeWriter:
 
     def close(self):
         self.asm_file.close()
+
+    def _function_asms(self, functionName: str, nVars: str) -> str:
+        symbol = f"{self.prog_name}.{functionName}"
+        push0 = ["@SP", "A=M", "M=0", "@SP", "M=M+1"]
+        asms_list = [f"({symbol})", *(push0 * nVars)]  # push0 を nVars 回だけ繰り返す
+        asms = "\n".join(asms_list) + "\n"
+        return asms
 
 
 if __name__ == "__main__":
