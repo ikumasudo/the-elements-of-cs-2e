@@ -198,6 +198,27 @@ class CodeWriter:
         asms = get_segment_asms(command, segment, index, self.prog_name)
         self.asm_file.write(asms)
 
+    def setFileName(fileName: str) -> None:
+        pass
+
+    def writeLabel(label: str) -> None:
+        pass
+
+    def writeGoto(label: str) -> None:
+        pass
+
+    def writeIf(label: str) -> None:
+        pass
+
+    def writeFunction(functionName: str, nVars: str) -> None:
+        pass
+
+    def writeCall(functionName: str, nArgs: str) -> None:
+        pass
+
+    def writeReturn() -> None:
+        pass
+
     def close(self):
         self.asm_file.close()
 
