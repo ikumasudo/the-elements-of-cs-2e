@@ -140,7 +140,6 @@ def get_segment_asms(op: Command, segment: str, i: int, prog_name: str) -> str:
             ]
             return "\n".join(asms) + "\n"
         elif segment == "pointer":
-            print(i, type(i))
             t = "THIS" if i == 0 else "THAT"
             asms = [f"@SP", "A=M-1", "D=M", f"@{t}", "M=D", "@SP", "M=M-1"]
             return "\n".join(asms) + "\n"
@@ -197,6 +196,32 @@ class CodeWriter:
     def writePushPop(self, command: Command, segment: str, index: int):
         asms = get_segment_asms(command, segment, index, self.prog_name)
         self.asm_file.write(asms)
+
+    def setFileName(self, fileName: str) -> None:
+        pass
+
+    def writeLabel(self, label: str) -> None:
+        asms = f"({label})\n"
+        self.asm_file.write(asms)
+
+    def writeGoto(self, label: str) -> None:
+        asms = [f"@{label}", "0;JMP"]
+        asms = "\n".join(asms) + "\n"
+        self.asm_file.write(asms)
+
+    def writeIf(self, label: str) -> None:
+        asms = ["@SP", "A=M-1", "D=M", "@SP", "M=M-1", f"@{label}", "D;JNE"]
+        asms = "\n".join(asms) + "\n"
+        self.asm_file.write(asms)
+
+    def writeFunction(self, functionName: str, nVars: str) -> None:
+        pass
+
+    def writeCall(self, functionName: str, nArgs: str) -> None:
+        pass
+
+    def writeReturn(self) -> None:
+        pass
 
     def close(self):
         self.asm_file.close()

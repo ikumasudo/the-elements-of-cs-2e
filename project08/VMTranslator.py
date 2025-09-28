@@ -18,13 +18,31 @@ if __name__ == "__main__":
         while p.hasMoreLines():
             p.advance()
             if p.commandType() in (Command.C_PUSH, Command.C_POP):
-                c = f"{p.current_line:20}\t| {p.commandType():20} {p.arg1():10} {str(p.arg2()):10}"
+                c = f"{p.current_line:30}| {p.commandType():20} {p.arg1():10} {str(p.arg2()):10}"
                 print(c)
                 w.writeComment(c)
 
                 w.writePushPop(p.commandType(), p.arg1(), p.arg2())
+            elif p.commandType() == Command.C_LABEL:
+                c = f"{p.current_line:30}| {p.commandType():20} {p.arg1():10}"
+                print(c)
+                w.writeComment(c)
+
+                w.writeLabel(p.arg1())
+            elif p.commandType() == Command.C_GOTO:
+                c = f"{p.current_line:30}| {p.commandType():20} {p.arg1():10}"
+                print(c)
+                w.writeComment(c)
+
+                w.writeGoto(p.arg1())
+            elif p.commandType() == Command.C_IF:
+                c = f"{p.current_line:30}| {p.commandType():20} {p.arg1():10}"
+                print(c)
+                w.writeComment(c)
+
+                w.writeIf(p.arg1())
             else:
-                c = f"{p.current_line:20}\t| {p.commandType():20} {p.arg1():10}"
+                c = f"{p.current_line:30}| {p.commandType():20} {p.arg1():10}"
                 print(c)
                 w.writeComment(c)
 
