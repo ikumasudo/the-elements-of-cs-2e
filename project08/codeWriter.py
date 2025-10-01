@@ -222,7 +222,60 @@ class CodeWriter:
         pass
 
     def writeReturn(self) -> None:
-        pass
+        asms = [
+            "@LCL",  # frame
+            "D=M",
+            "@5",
+            "A=D-A",
+            "D=M",
+            "@R13",  # retAddr
+            "M=D",
+            "@SP",
+            "AM=M-1",
+            "D=M",
+            "@ARG",
+            "A=M",
+            "M=D",
+            "@ARG",
+            "D=M",
+            "@SP",
+            "M=D+1",
+            "@LCL",
+            "A=M-1",
+            "D=M",
+            "@THAT",
+            "M=D",  # THAT=*(frame-1)
+            "@LCL",
+            "D=M",
+            "@2",
+            "D=D-A",
+            "A=D",
+            "D=M",
+            "@THIS",
+            "M=D",  # THIS=*(frame-2)
+            "@LCL",
+            "D=M",
+            "@3",
+            "D=D-A",
+            "A=D",
+            "D=M",
+            "@ARG",
+            "M=D",  # ARG=*(frame-3)
+            "@LCL",
+            "D=M",
+            "@4",
+            "D=D-A",
+            "A=D",
+            "D=M",
+            "@LCL",
+            "M=D",
+            "@R13",
+            "A=M",
+            "0;JMP",
+        ]
+
+        asms = "\n".join(asms) + "\n"
+        self.asm_file.write(asms)
 
     def close(self):
         self.asm_file.close()
@@ -230,7 +283,10 @@ class CodeWriter:
     def _function_asms(self, functionName: str, nVars: str) -> str:
         symbol = f"{self.prog_name}.{functionName}"
         push0 = ["@SP", "A=M", "M=0", "@SP", "M=M+1"]
-        asms_list = [f"({symbol})", *(push0 * nVars)]  # push0 を nVars 回だけ繰り返す
+        asms_list = [
+            f"({symbol})",
+            *(push0 * int(nVars)),
+        ]  # push0 を nVars 回だけ繰り返す
         asms = "\n".join(asms_list) + "\n"
         return asms
 

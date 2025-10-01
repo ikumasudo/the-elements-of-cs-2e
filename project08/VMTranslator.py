@@ -41,8 +41,26 @@ if __name__ == "__main__":
                 w.writeComment(c)
 
                 w.writeIf(p.arg1())
+            elif p.commandType() == Command.C_FUNCTION:
+                c = f"{p.current_line:30}| {p.commandType():20} {p.arg1():10} {str(p.arg2()):10}"
+                print(c)
+                w.writeComment(c)
+
+                w.writeFunction(p.arg1(), str(p.arg2()))
+            elif p.commandType() == Command.C_RETURN:
+                c = f"{p.current_line:30}| {p.commandType():20}"
+                print(c)
+                w.writeComment(c)
+
+                w.writeReturn()
+            elif p.commandType() == Command.C_ARITHMETIC:
+                c = f"{p.current_line:30}| {p.commandType():20}"
+                print(c)
+                w.writeComment(c)
+
+                w.writeArithmetic(p.arg1())
             else:
-                c = f"{p.current_line:30}| {p.commandType():20} {p.arg1():10}"
+                c = f"{p.current_line:30}| {p.commandType():20}"
                 print(c)
                 w.writeComment(c)
 
