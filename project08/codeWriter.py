@@ -159,12 +159,26 @@ class CodeWriter:
         self.jump_label_idx = 0
 
         self.function_name: str | None = None
+        self.call_label_idx = 0
 
     def setFileName(self, file_name: str):
         # file_name: `XXX.vm` の `XXX` の部分
         self.prog_name = file_name
 
         print(f"prog_name を {self.prog_name} に設定しました")
+
+    def write_bootstrap(self):
+        bootstrap = [
+            "// Bootstrap code",
+            "@256",
+            "D=A",
+            "@SP",
+            "M=D",
+        ]
+        self.asm_file.write("\n".join(bootstrap) + "\n")
+
+        # Sys.init を呼び出す（call命令を使う）
+        self.writeCall("Sys.init", "0")
 
     def writeComment(self, comment: str):
         self.asm_file.write("//" + comment + "\n")
@@ -213,7 +227,7 @@ class CodeWriter:
         self.asm_file.write(asms)
 
     def writeGoto(self, label: str) -> None:
-        asms = [f"{self.function_name}${label}", "0;JMP"]
+        asms = [f"@{self.function_name}${label}", "0;JMP"]
         asms = "\n".join(asms) + "\n"
         self.asm_file.write(asms)
 
@@ -233,12 +247,59 @@ class CodeWriter:
     def writeFunction(self, functionName: str, nVars: str) -> None:
         self.function_name = functionName
         print(f"functionName を {functionName}に設定しました。")
+        self.call_label_idx = 0
 
         asms = self._function_asms(functionName, nVars)
         self.asm_file.write(asms)
 
+    def _save_segment_base_addres(self, segment: str) -> list[str]:
+        asms = [
+            f"@{segment}",
+            "D=M",
+            "@SP",
+            "A=M",
+            "M=D",
+            "@SP",
+            "M=M+1",
+        ]
+
+        return asms
+
     def writeCall(self, functionName: str, nArgs: str) -> None:
-        pass
+        return_label = f"{self.function_name}$ret.{self.call_label_idx}"
+        self.call_label_idx += 1
+
+        asms = [
+            f"@{return_label}",
+            "D=A",
+            "@SP",
+            "A=M",
+            "M=D",
+            "@SP",
+            "M=M+1",
+            *self._save_segment_base_addres("LCL"),
+            *self._save_segment_base_addres("ARG"),
+            *self._save_segment_base_addres("THIS"),
+            *self._save_segment_base_addres("THAT"),
+            "@SP",
+            "D=M",
+            "@5",
+            "D=D-A",
+            f"@{nArgs}",
+            "D=D-A",
+            "@ARG",
+            "M=D",
+            "@SP",
+            "D=M",
+            "@LCL",
+            "M=D",
+            f"@{functionName}",
+            "0;JMP",
+            f"({return_label})",
+        ]
+
+        asms = "\n".join(asms) + "\n"
+        self.asm_file.write(asms)
 
     def writeReturn(self) -> None:
         asms = [

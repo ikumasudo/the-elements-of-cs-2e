@@ -5,6 +5,7 @@ from pathlib import Path
 
 
 def translate(p: Parser, w: CodeWriter):
+    w.write_bootstrap()
     while p.hasMoreLines():
         p.advance()
         if p.commandType() in (Command.C_PUSH, Command.C_POP):
@@ -13,6 +14,12 @@ def translate(p: Parser, w: CodeWriter):
             w.writeComment(c)
 
             w.writePushPop(p.commandType(), p.arg1(), p.arg2())
+        elif p.commandType() == Command.C_CALL:
+            c = f"{p.current_line:30}| {p.commandType():20} {p.arg1():10} {str(p.arg2()):10}"
+            print(c)
+            w.writeComment(c)
+
+            w.writeCall(p.arg1(), str(p.arg2()))
         elif p.commandType() == Command.C_LABEL:
             c = f"{p.current_line:30}| {p.commandType():20} {p.arg1():10}"
             print(c)
