@@ -158,6 +158,14 @@ class CodeWriter:
 
         self.jump_label_idx = 0
 
+        self.function_name: str | None = None
+
+    def setFileName(self, file_name: str):
+        # file_name: `XXX.vm` の `XXX` の部分
+        self.prog_name = file_name
+
+        print(f"prog_name を {self.prog_name} に設定しました")
+
     def writeComment(self, comment: str):
         self.asm_file.write("//" + comment + "\n")
 
@@ -197,24 +205,35 @@ class CodeWriter:
         asms = get_segment_asms(command, segment, index, self.prog_name)
         self.asm_file.write(asms)
 
-    def setFileName(self, fileName: str) -> None:
-        pass
-
     def writeLabel(self, label: str) -> None:
-        asms = f"({label})\n"
+        asms = f"({self.function_name}${label})\n"
+
+        print(f"ラベル：{asms}")
+
         self.asm_file.write(asms)
 
     def writeGoto(self, label: str) -> None:
-        asms = [f"@{label}", "0;JMP"]
+        asms = [f"{self.function_name}${label}", "0;JMP"]
         asms = "\n".join(asms) + "\n"
         self.asm_file.write(asms)
 
     def writeIf(self, label: str) -> None:
-        asms = ["@SP", "A=M-1", "D=M", "@SP", "M=M-1", f"@{label}", "D;JNE"]
+        asms = [
+            "@SP",
+            "A=M-1",
+            "D=M",
+            "@SP",
+            "M=M-1",
+            f"@{self.function_name}${label}",
+            "D;JNE",
+        ]
         asms = "\n".join(asms) + "\n"
         self.asm_file.write(asms)
 
     def writeFunction(self, functionName: str, nVars: str) -> None:
+        self.function_name = functionName
+        print(f"functionName を {functionName}に設定しました。")
+
         asms = self._function_asms(functionName, nVars)
         self.asm_file.write(asms)
 
@@ -281,7 +300,7 @@ class CodeWriter:
         self.asm_file.close()
 
     def _function_asms(self, functionName: str, nVars: str) -> str:
-        symbol = f"{self.prog_name}.{functionName}"
+        symbol = f"{functionName}"
         push0 = ["@SP", "A=M", "M=0", "@SP", "M=M+1"]
         asms_list = [
             f"({symbol})",
